@@ -1,0 +1,49 @@
+"The problem of collective action is a variant of the prisoners' dilemma, albeit one with many more than two prisoners... How can unpopular tyrants control large populations for long periods [when] a simultaneous move by the masses stands a very good chance of success.
+
+     But the communication and coordination required for such action is difficult, and the oppresors, knowing the power of the masses, take special steps to keep it difficult. When the people must act individually and hope that the momentum will build up, the question arises, 'Who is going to be the first?'"
+     - *abridged quote from "The art of strategy"
+
+
+* Strong network effects, accumulate potential investors by creating a game-like version where investors can invest fake cash and win real cash prizes, as well as submit over/under bets for things like album sales. Once we have enough investors, we can begin attracting artists to sign
+
+* Why would it be appealing?
+  - For investors: People would be able to invest in lucrative businesses that issue regular dividends that they truly know and have a feel for, rather than trying to speculate on markets which they are unfamiliar with
+  - For artists: Transparent contracts, much more control over terms, clear route to buying back their masters, they get to deal with people that love them rather than cold, calculating label execs, they would have a highly distributed distribution network
+
+COMPARE:
+- Soundcharts api
+- Chartmetric api
+  + API KEY:
+- Songstats api
+
+Prototype goal:
+    + Build factory for parsing json output from api to create stock market like charts for individual artists on an on-demand basis
+      - Stack:
+        + Rust + WASM??? + HTML5 canvas???
+        + Plotters crate
+        + Serde crate
+        + Soundcharts api (https://doc.api.soundcharts.com/api/v2/do)
+          - sandbox env:
+            + https://sandbox.api.soundcharts.com
+              + creds:
+                - App ID: soundcharts
+                - Api KEY: soundcharts
+
+      - Data to chart:
+
+        + spotify listeners per month
+          - Include location breakdown
+          - Allow toggling between one data point per month and one data point per day
+          - By country
+          * review formatting to exclude misformatted data
+          * confirm city breakdown for a given code matches country breakdown
+
+        + youtube views per month for last 12 months
+          - Include location breakdown
+          - Allow toggling between one data point per month and one data point per day
+          - By country
+          * review formatting to exclude misformatted data
+          * confirm city breakdown for a given code matches country breakdown
+
+
+***** LOOK INTO https://corporatefinanceinstitute.com/resources/knowledge/trading-investing/how-to-read-stock-charts/
