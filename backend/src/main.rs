@@ -25,19 +25,23 @@ use warp::{
     http::StatusCode
 };
 use std::collections::HashMap;
+use std::sync::Arc;
+use parking_lot::RwLock;
+
 
 // local store -- to later be replaced by a DB
 #[derive(Clone)]
 struct Store {
     // Using a hashmap here so that we can index an item given its ID w/o traversing the whole
     // collection
-    posts: HashMap<PostID, Post>,
+    posts: Arc<RwLock<HashMap<PostID, Post>>>,
 }
 
 impl Store {
     fn new() -> Self {
         Store {
-            posts: HashMap::new(),
+            posts: Arc::New(RwLock::new(Self::init())),
+            responses: Arc::new(RwLock::new(HashMap::new())),
         }
     }
     fn init() -> HashMap<PostID, Post> {
@@ -101,12 +105,12 @@ struct Pagination {
     start: usize,
     end: usize,
 }
------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
 // NEED TO REFURBISH ERROR HANDLING
 // What if params > Store.size 
 // What if end < start
 // etc...
-----------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------------
 fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Error> {
     // check if both parameters are present
     if params.contains_key("start") && params.contains_key("end") {
