@@ -36,7 +36,17 @@
 //          + parking_lot library
 //
 
-
+// Rough JSON structure: 
+//  - rank: u16,
+//  - change: String,
+//  - country: string,
+//  - popularity: u8 <--------------- maybe this shoudl go in Background
+//  - internal_link: String <-------- maybe this should go in Background
+//  - peak_position: u16 
+//  - peak_date: String <------------ maybe parse into 3-tuple 
+//  - seven_day_velocity: f32,
+//  - total_days_on_chart: String,
+//  - current_streak: u16 <---------- meaning?
 
 use std::sync::Arc;
 use parking_lot::RwLock;
