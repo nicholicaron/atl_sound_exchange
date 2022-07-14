@@ -29,106 +29,106 @@ enum Genre{
 
 #[derive(PartialEq)]
 enum AlternativeSubgenre{
-
+    Alternative,
 }
 
 #[derive(PartialEq)]
 enum BluesSubgenre{
-
+    Blues,
 }
 
 #[derive(PartialEq)]
 enum ClassicalSubgenre{
-
+    Classical,
 }
 
 #[derive(PartialEq)]
 enum CountrySubgenre{
-
+    Country,
 }
 
 #[derive(PartialEq)]
 enum DanceSubgenre{
-
+    Dance,
 }
 
 #[derive(PartialEq)]
 enum EasyListeningSubgenre{
-
+    EasyListening,
 }
 
 #[derive(PartialEq)]
 enum ElectronicSubgenre{
-
+    Electronic,
 }
 
 #[derive(PartialEq)]
 enum FolkSubgenre{
-
+    Folk,
 }
 
 #[derive(PartialEq)]
 enum HipHopSubgenre{
-
+    HipHop,
 }
 
 #[derive(PartialEq)]
 enum HolidaySubgenre{
-
+    Holiday,
 }
 
 #[derive(PartialEq)]
 enum IndustrialSubgenre{
-
+    Industrial,
 }
 
 #[derive(PartialEq)]
 enum JazzSubgenre{
-
+    Jazz,
 }
 
 #[derive(PartialEq)]
 enum LatinSubgenre{
-
+    Latin,
 }
 
 #[derive(PartialEq)]
 enum MetalSubgenre{
-
+    Metal,
 }
 
 #[derive(PartialEq)]
 enum NewAgeSubgenre{
-
+    NewAge,
 }
 
 #[derive(PartialEq)]
 enum PopSubgenre{
-
+    Pop,
 }
 
 #[derive(PartialEq)]
 enum RnbSubgenre{
-
+    Rnb,
 }
 
 #[derive(PartialEq)]
 enum ReggaeSubgenre{
-
+    Reggae,
 }
 
 #[derive(PartialEq)]
 enum RockSubgenre{
-
+    Rock,
 }
 
 #[derive(PartialEq)]
 enum TejanoSubgenre{
-
+    Tejano,
 }
 
 #[derive(PartialEq)]
 enum VocalSubgenre{
-
+    Vocal,
 }
 
