@@ -3,7 +3,7 @@
 
 
 #[derive(PartialEq)]
-enum Genre{
+pub enum Genre{
     AlternativeSubgenre,
     BluesSubgenre,
     ClassicalSubgenre,

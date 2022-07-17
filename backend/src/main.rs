@@ -1,81 +1,39 @@
-// GO vs RUST for web api's
-//
-// Pro Rust: 
-//      - Data processing capabilities
-//      - Error handling
-//      - generics
-//      - Closure serialization (makes 'moving compute to data' [hadoop/spark] easier)
-//      - Clean interface to C (not sure if this will be relevant to this project)
-//      - 
-//
-// Pro Go (GoPro? lol):
-//      - Far more ergonomic for this sorta thing
-//      - Better libraries
-
+use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
-use warp::{
-    Filter,
-    filters::{
-        cors::CorsForbidden
-    },
-    reject::Reject,
-    http::Method,
-    Rejection,
-    Reply,
-    http::StatusCode
-};
 use std::collections::HashMap;
 use std::sync::Arc;
-use parking_lot::RwLock;
+use warp::{
+    filters::cors::CorsForbidden, http::Method, http::StatusCode, reject::Reject, Filter,
+    Rejection, Reply,
+};
+use backend::artist;
+
+pub mod artist;
 
 
-// local store -- to later be replaced by a DB
-#[derive(Clone)]
-struct Store {
-    // Using a hashmap here so that we can index an item given its ID w/o traversing the whole
-    // collection
-    posts: Arc<RwLock<HashMap<PostID, Post>>>,
-}
-
-impl Store {
-    fn new() -> Self {
-        Store {
-            posts: Arc::New(RwLock::new(Self::init())),
-            responses: Arc::new(RwLock::new(HashMap::new())),
-        }
-    }
-    fn init() -> HashMap<PostID, Post> {
-        // REMEMBER TO USE SOMETHING OTHER THAN FROM_STR FOR ARTIST_DATA STRUCTS
-        // JSON Files will be way too large
-        let file = include_str!("../posts.json");
-        serde_json::from_str(file).expect("Can't read posts.json file")
-    }
-}
-
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-struct Post {
-    id: PostID,
-    author: Username,
-    title: String, 
-    content: String,
-    tags: Option<Vec<String>>,
-}
+//#[derive(Debug, Serialize, Deserialize, Clone)]
+// struct Post {
+//    id: PostID,
+//    author: Username,
+//    title: String,
+//    content: String,
+//    tags: Option<Vec<String>>,
+//}
 
 // impl Post {
-    // Instead of instantiating a new question instance, we could edit the existing instance,
-    // but then we wade into the "lifetime" waters
-    // fn update_title(&self, new_title: String) -> Post {
-    //    Post::new(self.id.clone(), self.author.clone(), new_title, self.content.clone(), self.tags.clone())
-    //}
+// Instead of instantiating a new question instance, we could edit the existing instance,
+// but then we wade into the "lifetime" waters
+// fn update_title(&self, new_title: String) -> Post {
+//    Post::new(self.id.clone(), self.author.clone(), new_title, self.content.clone(), self.tags.clone())
+//}
 //}
 
 // Newtype Idiom differentiates QuestionID types from normal strings
 // https://doc.rust-lang.org/rust-by-example/generics/new_types.html
-#[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
-struct PostID(String); 
+// #[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
+// struct PostID(String);
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+// #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Username(String);
 
 #[derive(Debug)]
@@ -88,16 +46,16 @@ enum Error {
 // Let's get some custom error messages going to disambiguate a bit
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match *self{
+        match *self {
             // ref???
             Error::ParseError(ref err) => write!(f, "Cannot parse parameter: {}", err),
-            Error::MissingParameters => write!(f, "Missing parameter")
+            Error::MissingParameters => write!(f, "Missing parameter"),
         }
     }
 }
 
 // marker trait so that's why the body's empty
-impl Reject for Error{}
+impl Reject for Error {}
 
 // Pagination struct to add structure to our receiving query params
 #[derive(Debug)]
@@ -107,7 +65,7 @@ struct Pagination {
 }
 // -----------------------------------------------------------------------------------------------------------------
 // NEED TO REFURBISH ERROR HANDLING
-// What if params > Store.size 
+// What if params > Store.size
 // What if end < start
 // etc...
 // ----------------------------------------------------------------------------------------------------------------
@@ -128,7 +86,7 @@ fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Err
                 .get("end")
                 .unwrap()
                 .parse::<usize>()
-                .map_err(Error::ParseError)?
+                .map_err(Error::ParseError)?,
         });
     }
     // If either param is missing, return our custom error type
@@ -139,8 +97,8 @@ async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
     // r.find() allows us to search for specific rejections
     if let Some(error) = r.find::<Error>() {
         Ok(warp::reply::with_status(
-                error.to_string(),
-                StatusCode::RANGE_NOT_SATISFIABLE,
+            error.to_string(),
+            StatusCode::RANGE_NOT_SATISFIABLE,
         ))
     } else if let Some(error) = r.find::<CorsForbidden>() {
         Ok(warp::reply::with_status(
@@ -157,7 +115,7 @@ async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
 
 // First route handler, returns either a reply or rejection
 async fn get_posts(params: HashMap<String, String>, store: Store) -> Result<impl Reply, Rejection> {
-    if !params.is_empty(){
+    if !params.is_empty() {
         let pagination = extract_pagination(params)?;
         let result: Vec<Post> = store.posts.values().cloned().collect();
         let result = &result[pagination.start..pagination.end];
@@ -168,13 +126,12 @@ async fn get_posts(params: HashMap<String, String>, store: Store) -> Result<impl
     }
 }
 
-
 #[tokio::main]
 async fn main() {
     let store = Store::new();
     // The any filter matches any request, so this statement evaluates for any and all requests
     // Map (w/ move closure) passes the store by value (following cloning) into the filter  so that
-    // each route handler has access to the store 
+    // each route handler has access to the store
     let store_filter = warp::any().map(move || store.clone());
 
     // Cross-Origin Resource Sharing (https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
@@ -206,7 +163,5 @@ async fn main() {
     let routes = get_items.with(cors);
 
     // start the server and pass the route filter to it
-    warp::serve(routes)
-        .run(([127, 0, 0, 1], 3030))
-        .await;
+    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
 }
