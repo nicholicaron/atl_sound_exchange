@@ -34,7 +34,7 @@ pub mod artist;
 // struct PostID(String);
 
 // #[derive(Debug, Clone, Serialize, Deserialize)]
-struct Username(String);
+// struct Username(String);
 
 #[derive(Debug)]
 enum Error {
@@ -114,14 +114,16 @@ async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
 }
 
 // First route handler, returns either a reply or rejection
-async fn get_posts(params: HashMap<String, String>, store: Store) -> Result<impl Reply, Rejection> {
+async fn get_artists(params: HashMap<String, String>, store: Store) -> Result<impl Reply, Rejection> {
     if !params.is_empty() {
         let pagination = extract_pagination(params)?;
-        let result: Vec<Post> = store.posts.values().cloned().collect();
+        // review cloning here, consider Arc<> instead of vec
+        let result: Vec<artist> = store.artists.values().cloned().collect();
         let result = &result[pagination.start..pagination.end];
         Ok(warp::reply::json(&result))
     } else {
-        let result: Vec<Post> = store.posts.values().cloned().collect();
+        // review clonging here, consider Arc<> instead of vec
+        let result: Vec<artist> = store.artists.values().cloned().collect();
         Ok(warp::reply::json(&result))
     }
 }
@@ -151,11 +153,11 @@ async fn main() {
     //
     // create a path Filter, chaining several filters
     let get_items = warp::get()
-        .and(warp::path("posts"))
+        .and(warp::path("artists"))
         .and(warp::path::end())
         .and(warp::query())
         .and(store_filter)
-        .and_then(get_posts)
+        .and_then(get_artists)
         // error handling filter, fetches every prev rejection and check
         // which HTTP message we need to send back
         .recover(return_error);
