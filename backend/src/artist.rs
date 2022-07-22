@@ -65,14 +65,16 @@ impl Store {
             genre: genre.HipHopSubgenre.HipHop,
             socials,
             background: Some<Arc::new(RwLock::new(background))>,
-            deezer_data: serde_json::from_reader(deezer_file).expect("Unable to read JSON file."),
-            instagram_data: serde_json::from_reader(instagram_file).expect("Unable to read JSON file."),
-            soundcloud_data: serde_json::from_reader(soundcloud_file).expect("Unable to read JSON file."),
-            spotify_data: serde_json::from_reader(spotify_file).expect("Unable to read JSON file."),
-            tiktok_data: serde_json::from_reader(tiktok_file).expect("Unable to read JSON file."),
-            twitter_data: serde_json::from_reader(twitter_file).expect("Unable to read JSON file."),
-            yt_artist_data: serde_json::from_reader(yt_artist_file).expect("Unable to read JSON file."),
-            yt_channel_data: serde_json::from_reader(yt_channel_data).expect("Unable to read JSON file."),
+            // WRAP IN ARC<RWLOCK>????
+            ---------------------------------------
+            deezer_data: Arc<RwLock::new(serde_json::from_reader(deezer_file).expect("Unable to read JSON file."))>,
+            instagram_data: Arc<RwLock::new(serde_json::from_reader(instagram_file).expect("Unable to read JSON file."))>,
+            soundcloud_data: Arc<RwLock::new(serde_json::from_reader(soundcloud_file).expect("Unable to read JSON file."))>,
+            spotify_data: Arc<RwLock::new(serde_json::from_reader(spotify_file).expect("Unable to read JSON file."))>,
+            tiktok_data: Arc<RwLock::new(serde_json::from_reader(tiktok_file).expect("Unable to read JSON file."))>,
+            twitter_data: Arc<RwLock::new(serde_json::from_reader(twitter_file).expect("Unable to read JSON file."))>,
+            yt_artist_data: Arc<RwLock::new(serde_json::from_reader(yt_artist_file).expect("Unable to read JSON file."))>,
+            yt_channel_data: Arc<RwLock::new(serde_json::from_reader(yt_channel_data).expect("Unable to read JSON file."))>,
         }
     }
 }
@@ -84,14 +86,16 @@ pub struct Artist {
     genre: genre,
     socials: Vec<URL>,
     background: Option<Arc<RwLock<Background>>>,
-    deezer_data: Option<Arc<RwLock<JSON>>>,
-    instagram_data: Option<Arc<RwLock<JSON>>>,
-    soundcloud_data: Option<Arc<RwLock<JSON>>>,
-    spotify_data: Option<Arc<RwLock<JSON>>>,
-    tiktok_data: Option<Arc<RwLock<JSON>>>,
-    twitter_data: Option<Arc<RwLock<JSON>>>,
-    yt_artist_data: Option<Arc<RwLock<JSON>>>,
-    yt_channel_data: Option<Arc<RwLock<JSON>>>,
+    // At first I thought we could wrap json values with Results, but calls to the chartmetric API still creates files
+    // even if no data is present. We may have to match on file contents to check 
+    deezer_data: Arc<RwLock<serde_json::value>>,
+    instagram_data: Arc<RwLock<serde_json::value>>,
+    soundcloud_data: Arc<RwLock<serde_json::value>>,
+    spotify_data: Arc<RwLock<serde_json::value>>,
+    tiktok_data: Arc<RwLock<serde_json::value>>,
+    twitter_data: Arc<RwLock<serde_json::value>>,
+   yt_channel_data: Arc<RwLock<serde_json::value>>,
+    yt_artist_data: Arc<RwLock<serde_json::value>>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -111,7 +115,4 @@ struct Origin{
     state: String,
     country: String,
 }
-
-
-
 
