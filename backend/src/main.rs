@@ -1,14 +1,11 @@
-use parking_lot::RwLock;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
 use warp::{
     filters::cors::CorsForbidden, http::Method, http::StatusCode, reject::Reject, Filter,
     Rejection, Reply,
 };
-use backend::artist;
+use crate::artist::Store;
 
-pub mod artist;
+mod artist;
 
 
 //#[derive(Debug, Serialize, Deserialize, Clone)]
@@ -76,8 +73,8 @@ fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Err
         return Ok(Pagination {
             start: params
                 // get returns an option
-                .get("start")
                 // since we already verified both params are present we can unwrap with a clear
+                .get("start")
                 // conscience
                 .unwrap()
                 .parse::<usize>()
@@ -118,12 +115,14 @@ async fn get_artists(params: HashMap<String, String>, store: Store) -> Result<im
     if !params.is_empty() {
         let pagination = extract_pagination(params)?;
         // review cloning here, consider Arc<> instead of vec
-        let result: Vec<artist> = store.artists.values().cloned().collect();
+        let result: Vec<artist::Artist> = store.artists.clone().collect();
         let result = &result[pagination.start..pagination.end];
+        // going to have to change this or impl custom serialize for Artist
         Ok(warp::reply::json(&result))
     } else {
         // review clonging here, consider Arc<> instead of vec
-        let result: Vec<artist> = store.artists.values().cloned().collect();
+        let result: Vec<artist::Artist> = store.artists.clone().collect();
+        // going to have to change this or impl custom serialize for Artist
         Ok(warp::reply::json(&result))
     }
 }
@@ -137,8 +136,8 @@ async fn main() {
     let store_filter = warp::any().map(move || store.clone());
 
     // Cross-Origin Resource Sharing (https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
-    // "an HTTP-header based mechanism that allows a server to indicate any origins other than its
     // own from which a browser should permit loading resources"
+    // "an HTTP-header based mechanism that allows a server to indicate any origins other than its
     let cors = warp::cors()
         .allow_any_origin()
         .allow_header("not-in-the-request")
