@@ -1,6 +1,8 @@
+// This file is a placeholder to get an idea of how our json files are structured to be able to
+// eventually graph them
+//
 // Do we need rust_decimal instead of f64???
-//
-//
+
 pub struct deezer_structure {
     obj
         link
