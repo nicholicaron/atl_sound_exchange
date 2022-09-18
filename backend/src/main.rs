@@ -9,31 +9,6 @@ use warp::{
 
 mod artist;
 
-//#[derive(Debug, Serialize, Deserialize, Clone)]
-// struct Post {
-//    id: PostID,
-//    author: Username,
-//    title: String,
-//    content: String,
-//    tags: Option<Vec<String>>,
-//}
-
-// impl Post {
-// Instead of instantiating a new artist instance, we could edit the existing instance,
-// but then we wade into the "lifetime" waters
-// fn update_title(&self, new_title: String) -> Post {
-//    Post::new(self.id.clone(), self.author.clone(), new_title, self.content.clone(), self.tags.clone())
-//}
-//}
-
-// Newtype Idiom differentiates QuestionID types from normal strings
-// https://doc.rust-lang.org/rust-by-example/generics/new_types.html
-// #[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
-// struct PostID(String);
-
-// #[derive(Debug, Clone, Serialize, Deserialize)]
-// struct Username(String);
-
 #[derive(Debug)]
 enum Error {
     // when rust can't parse an int out of a string we get a ParseIntError
@@ -156,9 +131,11 @@ async fn update_artist(
     store: Store,
     artist: artist::Artist,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    match store.artists.write().get_mut(&artist::ArtistID {
-        number: id.parse().unwrap(),
-    }) {
+    match store
+        .artists
+        .write()
+        .get_mut(&artist::ArtistID(id.parse().unwrap()))
+    {
         Some(a) => *a = artist,
         None => return Err(warp::reject::custom(Error::ArtistNotFound)),
     }
@@ -171,9 +148,11 @@ async fn update_artist(
 
 //  and_then filter expects id to be string, so we pass it as a String, then parse to u16 while matching on accessing the hashmap via its keys (id: ArtistID(u16))
 async fn delete_artist(id: String, store: Store) -> Result<impl warp::Reply, warp::Rejection> {
-    match store.artists.write().remove(&artist::ArtistID {
-        number: id.parse().unwrap(),
-    }) {
+    match store
+        .artists
+        .write()
+        .remove(&artist::ArtistID(id.parse().unwrap()))
+    {
         Some(_) => return Ok(warp::reply::with_status("Artist deleted", StatusCode::OK)),
         None => return Err(warp::reject::custom(Error::ArtistNotFound)),
     }

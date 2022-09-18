@@ -12,13 +12,10 @@ use std::sync::Arc;
 
 pub mod genre;
 
-// Had to split ArtistID struct because warp filters expect string so we'll just index artists by their number
+// Newtype Idiom differentiates ArtistID types from normal u16's
+// https://doc.rust-lang.org/rust-by-example/generics/new_types.html
 #[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
-pub struct ArtistID {
-    //     pub name: String,
-    // u16 upper bound: 65536
-    pub number: u16,
-}
+pub struct ArtistID(pub u16);
 
 // May bring this newtype for socials vec back eventually, for now it seems unnecessary
 // #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -153,7 +150,7 @@ impl Store {
 
         // serde_json::from_reader(file).expect("Can't read artist.json file")
         // serde_json::from_reader(file) vs json! macro???
-        let id = ArtistID { number: kanye_id };
+        let id = ArtistID(kanye_id);
         let kanye = Artist {
             id: id.clone(),
             name: kanye_name,
