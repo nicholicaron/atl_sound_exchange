@@ -1,3 +1,5 @@
+pub mod genre;
+
 use parking_lot::RwLock;
 use serde::{
     // ser::{SerializeStruct, Serializer},
@@ -5,12 +7,7 @@ use serde::{
     Serialize,
 };
 use serde_json::value::Value as json;
-use std::collections::HashMap;
-use std::fs::File;
-use std::io::BufReader;
 use std::sync::Arc;
-
-pub mod genre;
 
 // Newtype Idiom differentiates ArtistID types from normal u16's
 // https://doc.rust-lang.org/rust-by-example/generics/new_types.html
@@ -31,26 +28,26 @@ pub struct ArtistID(pub u16);
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Artist {
     pub id: ArtistID,
-    name: String,
-    genre: genre::Genre,
-    socials: Vec<String>,
-    background: Arc<RwLock<Background>>,
+    pub name: String,
+    pub genre: genre::Genre,
+    pub socials: Vec<String>,
+    pub background: Arc<RwLock<Background>>,
     // At first I thought we could wrap json values with Results, but calls to the chartmetric API still creates files
     // even if no data is present. We may have to match on file contents to check
-    deezer_data: Arc<RwLock<json>>,
-    instagram_data: Arc<RwLock<json>>,
-    soundcloud_data: Arc<RwLock<json>>,
-    spotify_data: Arc<RwLock<json>>,
-    tiktok_data: Arc<RwLock<json>>,
-    twitter_data: Arc<RwLock<json>>,
-    yt_channel_data: Arc<RwLock<json>>,
-    yt_artist_data: Arc<RwLock<json>>,
+    pub deezer_data: Arc<RwLock<json>>,
+    pub instagram_data: Arc<RwLock<json>>,
+    pub soundcloud_data: Arc<RwLock<json>>,
+    pub spotify_data: Arc<RwLock<json>>,
+    pub tiktok_data: Arc<RwLock<json>>,
+    pub twitter_data: Arc<RwLock<json>>,
+    pub yt_channel_data: Arc<RwLock<json>>,
+    pub yt_artist_data: Arc<RwLock<json>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Background {
-    origin: Arc<RwLock<Origin>>,
-    description: String,
+    pub origin: Arc<RwLock<Origin>>,
+    pub description: String,
     // top_songs todo!()
 }
 
@@ -60,7 +57,7 @@ pub struct Background {
 // I wonder if there will be an issue with nested Arc<RwLock<>>'s
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Origin {
-    city: String,
-    state: String,
-    country: String,
+    pub city: String,
+    pub state: String,
+    pub country: String,
 }

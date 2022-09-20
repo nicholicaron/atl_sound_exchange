@@ -64,7 +64,7 @@ pub async fn delete_artist(id: String, store: Store) -> Result<impl warp::Reply,
         .write()
         .remove(&artist::ArtistID(id.parse().unwrap()))
     {
-        Some(_) => return Ok(warp::reply::with_status("Artist deleted", StatusCode::OK)),
-        None => return Err(warp::reject::custom(Error::ArtistNotFound)),
+        Some(_) => Ok(warp::reply::with_status("Artist deleted", StatusCode::OK)),
+        None => Err(warp::reject::custom(Error::ArtistNotFound)),
     }
 }

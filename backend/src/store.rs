@@ -1,3 +1,12 @@
+use parking_lot::RwLock;
+use std::collections::HashMap;
+use std::fs::File;
+use std::io::BufReader;
+use std::sync::Arc;
+
+use crate::types::artist::genre;
+use crate::types::artist::{Artist, ArtistID, Background, Origin};
+
 // local store -- to later be replaced by a DB
 #[derive(Clone)]
 pub struct Store {
@@ -13,13 +22,13 @@ impl Store {
         }
     }
     fn init() -> HashMap<ArtistID, Artist> {
-        let kanye_id = 000001;
+        let kanye_id = 1;
 
         let kanye_name = "Kanye West".to_string();
 
         let mut socials: Vec<String> = Vec::new();
         {
-            let social_entries = include_str!("../artist_data/test_kanye/socials.txt").split("\n");
+            let social_entries = include_str!("../artist_data/test_kanye/socials.txt").split('\n');
             for line in social_entries {
                 socials.push(line.to_string());
             }

@@ -1,3 +1,5 @@
+#![warn(clippy::all)]
+
 use warp::{http::Method, Filter};
 
 use crate::routes::artist_routes::{add_artist, delete_artist, get_artists, update_artist};

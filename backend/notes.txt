@@ -1,3 +1,8 @@
+TODO:
+    + ERROR HANDLING
+    + DOCUMENTATION!!!!
+
+
 GO vs RUST for web api's
 
 Pro Rust:
