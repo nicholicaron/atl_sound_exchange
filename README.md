@@ -30,8 +30,4 @@ But the communication and coordination required for such action is difficult, an
  
  
 -- "The art of strategy"
-<<<<<<< HEAD
-
-=======
->>>>>>> refs/remotes/origin/main
 
