@@ -10,3 +10,7 @@ backend/target
 
 # Artist data directory full of big JSON files, to be replaced by DB
 backend/artist_data/
+
+# Some notes to self
+backend/to_do.txt
+backend/tabs.txt
