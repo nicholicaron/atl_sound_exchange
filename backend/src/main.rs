@@ -4,6 +4,9 @@ use warp::{http::Method, Filter};
 
 use crate::routes::artist_routes::{add_artist, delete_artist, get_artists, update_artist};
 use crate::store::Store;
+use std::{fs::File, sync::Arc};
+use tracing_subscriber::fmt::format::FmtSpan;
+use tracing_subscriber::{filter, prelude::*};
 
 mod error;
 mod routes;
@@ -12,26 +15,67 @@ mod types;
 
 #[tokio::main]
 async fn main() {
+    // console logs
+    let stdout_log = tracing_subscriber::fmt::layer().pretty();
+
+    // logs events to a file
+    let log_file = match File::open("debug.log") {
+        Ok(log_file) => log_file,
+        Err(err) => panic!("Error: {:?}", err),
+    };
+    let debug_log = tracing_subscriber::fmt::layer().with_writer(Arc::new(log_file));
+
+    // A layer that collects metrics using specific events
+    let metrics_layer = /* ... */ filter::LevelFilter::INFO;
+
+    tracing_subscriber::registry()
+        .with(
+            stdout_log
+                // Add an 'INFO' filter to the stdout logging layer
+                .with_filter(filter::LevelFilter::INFO)
+                // Combine the filtered 'stdout_log' layer with the 'debug_log' layer, producing a new 'Layered' layer
+                .and_then(debug_log)
+                // Add a filter to *both* layers that rejects spans and events whose targets start with 'metrics'
+                .with_filter(filter::filter_fn(|metadata| {
+                    !metadata.target().starts_with("metrics")
+                })),
+        )
+        .with(
+            // Add a filter to the metrics label that *only* enables events whose targets start with 'metrics'
+            metrics_layer.with_filter(filter::filter_fn(|metadata| {
+                metadata.target().starts_with("metrics")
+            })),
+        )
+        .init();
+
+    // global log collector configured by RUST_LOG environmental variable
+    let log_filter = std::env::var("RUST_LOG")
+        // default log level
+        .unwrap_or_else(|_| "atl_sound_exchange=info,warp=error".to_owned());
+
     let store = Store::new();
     // The any filter matches any request, so this statement evaluates for any and all requests
     // Map (w/ move closure) passes the store by value (following cloning) into the filter  so that
     // each route handler has access to the store
-
     // TODO:
     // seems like we clone the store A LOT, let's eventually optimize this and try to pass around references where possible
     let store_filter = warp::any().map(move || store.clone());
+
+    // Subscriber: receives all internal log and tracing events and decides what to do with them
+    tracing_subscriber::fmt()
+        // Use the log filter we built above to determine which traces to record
+        .with_env_filter(log_filter)
+        // Record an event when each span closes. This can be used to time our routes' durations
+        .with_span_events(FmtSpan::CLOSE)
+        .init();
 
     // Cross-Origin Resource Sharing (https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
     // "an HTTP-header based mechanism that allows a server to indicate any origins other than its
     // own from which a browser should permit loading resources"
     let cors = warp::cors()
         .allow_any_origin()
-        .allow_header("not-in-the-request")
-        .allow_method(&Method::PUT)
-        .allow_method(&Method::DELETE)
-        .allow_method(&Method::GET)
-        // DOUBLE CHECK WHETHER WE NEED POST REQUESTS, users will not be updating artist structs
-        .allow_method(&Method::POST);
+        .allow_header("content-type")
+        .allow_methods(&[Method::PUT, Method::DELETE, Method::GET, Method::POST]);
 
     // What is a filter?
     // Each HTTP requeset runs through the filters we setup and adds or modifies the data along the
@@ -46,7 +90,16 @@ async fn main() {
         .and(warp::path::end())
         .and(warp::query())
         .and(store_filter.clone())
-        .and_then(get_artists);
+        .and_then(get_artists)
+        .with(warp::trace(|info| {
+            tracing::info_span!(
+                "get_artists request",
+                // % sigil indicates the value should be recorded using its fmt::Display implementation
+                method = %info.method(),
+                path = %info.path(),
+                id = %uuid::Uuid::new_v4(),
+            )
+        }));
 
     // It seems accepting all POST requests for artists would be a vulnerability
     // We will want to add them internally, instead of allowing users to make POST requests
@@ -88,6 +141,8 @@ async fn main() {
         .or(add_artist)
         .or(delete_artist)
         .with(cors)
+        // log incoming requests as well
+        .with(warp::trace::request())
         .recover(error::return_error);
 
     // start the server and pass the route filter to it

@@ -8,7 +8,7 @@ use crate::types::artist::genre;
 use crate::types::artist::{Artist, ArtistID, Background, Origin};
 
 // local store -- to later be replaced by a DB
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Store {
     // Using a hashmap here so that we can index an item given its ID w/o traversing the whole
     // collection
@@ -36,7 +36,7 @@ impl Store {
 
         let mut origin_lines = include_str!("../artist_data/test_kanye/origin.txt").lines();
         let background = Background {
-            description: "../artist_data/test_kanye/background.txt".to_string(),
+            description: "../../artist_data/test_kanye/background.txt".to_string(),
             origin: Arc::new(RwLock::new(Origin {
                 city: origin_lines
                     .next()

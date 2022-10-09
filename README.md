@@ -3,7 +3,7 @@
 ### What if you could invest in a product that you know better than anyone? ###
 ---------------------
 
-The idea is to build an **open-sourced record label that functions as Stock Market**. The market would display an artists popularity by charting streaming data and calculating a _share price (i.e. partial ownership in a record deal)_ and _dividends (i.e. royalties)_. Thus allowing day-one fans to act as **A&R**'s and putting their money where their mouth is. 
+The idea is to build an **crowd-funded record label that functions as Stock Market**. The market would display an artists popularity by charting streaming data and calculating a _share price (i.e. partial ownership in a record deal)_ and _dividends (i.e. royalties)_. Thus allowing day-one fans to act as **A&R**'s and putting their money where their mouth is. 
 
 **A musical artist is a business**. They require startup capital and distribution, they benefit from network economies, counter-positioning, and branding. There is also a strong opportunity for a derivatives market.
 

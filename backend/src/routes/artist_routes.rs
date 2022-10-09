@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use tracing::{info, instrument};
 use warp::{http::StatusCode, Rejection, Reply};
 
 use crate::error::Error;
@@ -6,17 +7,22 @@ use crate::store::Store;
 use crate::types::{artist, pagination};
 
 // First route handler, returns either a reply or rejection
+// tracing macro to open/close span (and assign tracing events to this span) for us since this is an async fn
+#[instrument]
 pub async fn get_artists(
     params: HashMap<String, String>,
     store: Store,
 ) -> Result<impl Reply, Rejection> {
+    info!("querying artists");
     if !params.is_empty() {
         let pagination = pagination::extract_pagination(params)?;
+        info!(pagination = true);
         let result: Vec<artist::Artist> = store.artists.read().values().cloned().collect();
         let result = &result[pagination.start..pagination.end];
         // Was warp::reply::json, need to implement serialize and deserialize for Artist Struct
         Ok(warp::reply::json(&result))
     } else {
+        info!(pagination = false);
         let result: Vec<artist::Artist> = store.artists.read().values().cloned().collect();
         // Was warp::reply::json, need to implement serialize and deserialize for Artist Struct
         Ok(warp::reply::json(&result))
