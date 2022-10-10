@@ -15,7 +15,13 @@ mod types;
 
 #[tokio::main]
 async fn main() {
-    // console logs
+    // TO DO: Revisit tracing, need to make sure logs are outputted to debug.log file
+    // Code below may work, need to test properly for warp compatibility
+
+    // https://docs.rs/tracing-subscriber/0.3.1/tracing_subscriber/layer/idnex.html
+    // https://stackoverflow.com/questions/70013172/how-to-use-the-tracing-library
+
+    /* console logs
     let stdout_log = tracing_subscriber::fmt::layer().pretty();
 
     // logs events to a file
@@ -47,6 +53,7 @@ async fn main() {
             })),
         )
         .init();
+    */
 
     // global log collector configured by RUST_LOG environmental variable
     let log_filter = std::env::var("RUST_LOG")

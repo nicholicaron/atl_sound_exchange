@@ -31,10 +31,12 @@ pub async fn get_artists(
 
 // Fn for processing HTTP POST requests to the /artists path
 // SHOULD ONLY BE ACCESSIBLE INTERNALLY / WITH AUTHENTICATION
+#[instrument]
 pub async fn add_artist(
     store: Store,
     artist: artist::Artist,
 ) -> Result<impl warp::Reply, warp::Rejection> {
+    info!("inserting artist: {}", &artist.name);
     store.artists.write().insert(artist.id.clone(), artist);
 
     Ok(warp::reply::with_status("Artist added", StatusCode::OK))
@@ -42,7 +44,7 @@ pub async fn add_artist(
 
 // Fn for processing HTTP PUT requests to the /artists path
 // SHOULD ONLY BE ACCESSIBLE INTERNALLY / WITH AUTHENTICATION
-
+#[instrument]
 pub async fn update_artist(
     id: String,
     store: Store,
@@ -53,8 +55,14 @@ pub async fn update_artist(
         .write()
         .get_mut(&artist::ArtistID(id.parse().unwrap()))
     {
-        Some(a) => *a = artist,
-        None => return Err(warp::reject::custom(Error::ArtistNotFound)),
+        Some(a) => {
+            info!("updating artist: {}", &artist.name);
+            *a = artist;
+        }
+        None => {
+            info!("failed to find and update artist: {}", &artist.name);
+            return Err(warp::reject::custom(Error::ArtistNotFound));
+        }
     }
 
     Ok(warp::reply::with_status("Artist updated", StatusCode::OK))
@@ -64,13 +72,17 @@ pub async fn update_artist(
 // SHOULD ONLY BE ACCESSIBLE INTERNALLY / WITH AUTHENTICATION
 
 //  and_then filter expects id to be string, so we pass it as a String, then parse to u16 while matching on accessing the hashmap via its keys (id: ArtistID(u16))
+#[instrument]
 pub async fn delete_artist(id: String, store: Store) -> Result<impl warp::Reply, warp::Rejection> {
     match store
         .artists
         .write()
         .remove(&artist::ArtistID(id.parse().unwrap()))
     {
-        Some(_) => Ok(warp::reply::with_status("Artist deleted", StatusCode::OK)),
+        Some(_) => {
+            info!("deleting artist: {}", &artist.name);
+            Ok(warp::reply::with_status("Artist deleted", StatusCode::OK));
+        }
         None => Err(warp::reject::custom(Error::ArtistNotFound)),
     }
 }
