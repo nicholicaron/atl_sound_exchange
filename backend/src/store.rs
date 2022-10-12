@@ -58,39 +58,39 @@ impl Store {
         // We should extract this functionality to a function, but it may be better to wait until we
         // replace our source with DB
         let deezer_file = BufReader::new(
-            File::open("../artist_data/test_kanye/deezer.json")
+            File::open("./artist_data/test_kanye/deezer.json")
                 .expect("error opening deezer json file"),
         );
         let instagram_file = BufReader::new(
-            File::open("../artist_data/test_kanye/instagram.json")
+            File::open("./artist_data/test_kanye/instagram.json")
                 .expect("error opening instagram json file"),
         );
         let soundcloud_file = BufReader::new(
-            File::open("../artist_data/test_kanye/soundcloud.json")
+            File::open("./artist_data/test_kanye/soundcloud.json")
                 .expect("error opening soundcloudn json file"),
         );
         let spotify_file = BufReader::new(
-            File::open("../artist_data/test_kanye/spotify.json")
+            File::open("./artist_data/test_kanye/spotify.json")
                 .expect("error opening spotify json file"),
         );
         let tiktok_file = BufReader::new(
-            File::open("../artist_data/test_kanye/tiktok.json")
+            File::open("./artist_data/test_kanye/tiktok.json")
                 .expect("error opening tiktok json file"),
         );
         let twitter_file = BufReader::new(
-            File::open("../artist_data/test_kanye/twitter.json")
+            File::open("./artist_data/test_kanye/twitter.json")
                 .expect("error opening twitter json file"),
         );
         let yt_artist_file = BufReader::new(
-            File::open("../artist_data/test_kanye/youtube_artist.json")
+            File::open("./artist_data/test_kanye/youtube_artist.json")
                 .expect("error opening youtube_artist json file"),
         );
         let yt_channel_file = BufReader::new(
-            File::open("../artist_data/test_kanye/youtube_channel.json")
+            File::open("./artist_data/test_kanye/youtube_channel.json")
                 .expect("error opening youtube_channel json file"),
         );
 
-        // serde_json::from_reader(file).expect("Can't read artist.json file")
+        // serde_json::from_reader(file).expect("can't read artist.json file")
         // serde_json::from_reader(file) vs json! macro???
         let id = ArtistID(kanye_id);
         let kanye = Artist {

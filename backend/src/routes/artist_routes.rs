@@ -36,7 +36,7 @@ pub async fn add_artist(
     store: Store,
     artist: artist::Artist,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    info!("inserting artist: {}", &artist.name);
+    info!("inserting artist: {:?}", artist.id.clone());
     store.artists.write().insert(artist.id.clone(), artist);
 
     Ok(warp::reply::with_status("Artist added", StatusCode::OK))
@@ -56,11 +56,11 @@ pub async fn update_artist(
         .get_mut(&artist::ArtistID(id.parse().unwrap()))
     {
         Some(a) => {
-            info!("updating artist: {}", &artist.name);
+            info!("updating artist: {:?}", artist.id.clone());
             *a = artist;
         }
         None => {
-            info!("failed to find and update artist: {}", &artist.name);
+            info!("failed to find and update artist: {:?}", artist.id.clone());
             return Err(warp::reject::custom(Error::ArtistNotFound));
         }
     }
@@ -80,8 +80,8 @@ pub async fn delete_artist(id: String, store: Store) -> Result<impl warp::Reply,
         .remove(&artist::ArtistID(id.parse().unwrap()))
     {
         Some(_) => {
-            info!("deleting artist: {}", &artist.name);
-            Ok(warp::reply::with_status("Artist deleted", StatusCode::OK));
+            info!("deleting artist id: {}", id.clone());
+            return Ok(warp::reply::with_status("Artist deleted", StatusCode::OK));
         }
         None => Err(warp::reject::custom(Error::ArtistNotFound)),
     }

@@ -15,13 +15,14 @@ mod types;
 
 #[tokio::main]
 async fn main() {
-    // TO DO: Revisit tracing, need to make sure logs are outputted to debug.log file
-    // Code below may work, need to test properly for warp compatibility
+    // TODO: Revisit tracing, need to make sure logs are outputted to debug.log file
+    // Console logs work, need to work on logging to file
+    // Also, we should probably avoid logging whole artist json file, makes logs much less readable
 
     // https://docs.rs/tracing-subscriber/0.3.1/tracing_subscriber/layer/idnex.html
     // https://stackoverflow.com/questions/70013172/how-to-use-the-tracing-library
 
-    /* console logs
+    // console logs
     let stdout_log = tracing_subscriber::fmt::layer().pretty();
 
     // logs events to a file
@@ -53,12 +54,11 @@ async fn main() {
             })),
         )
         .init();
-    */
 
     // global log collector configured by RUST_LOG environmental variable
-    let log_filter = std::env::var("RUST_LOG")
-        // default log level
-        .unwrap_or_else(|_| "atl_sound_exchange=info,warp=error".to_owned());
+    // let log_filter = std::env::var("RUST_LOG")
+    // default log level
+    //  .unwrap_or_else(|_| "atl_sound_exchange=info,warp=error".to_owned());
 
     let store = Store::new();
     // The any filter matches any request, so this statement evaluates for any and all requests
@@ -69,12 +69,13 @@ async fn main() {
     let store_filter = warp::any().map(move || store.clone());
 
     // Subscriber: receives all internal log and tracing events and decides what to do with them
-    tracing_subscriber::fmt()
+    /* tracing_subscriber::fmt()
         // Use the log filter we built above to determine which traces to record
         .with_env_filter(log_filter)
         // Record an event when each span closes. This can be used to time our routes' durations
         .with_span_events(FmtSpan::CLOSE)
         .init();
+    */
 
     // Cross-Origin Resource Sharing (https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
     // "an HTTP-header based mechanism that allows a server to indicate any origins other than its
