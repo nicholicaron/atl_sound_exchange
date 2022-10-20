@@ -1,8 +1,7 @@
 use std::collections::HashMap;
-use tracing::{info, instrument};
-use warp::{http::StatusCode, Rejection, Reply};
+use tracing::{instrument, *};
+use warp::{Rejection, Reply};
 
-use crate::error::Error;
 use crate::store::Store;
 use crate::types::{artist, pagination};
 
@@ -13,30 +12,37 @@ pub async fn get_artists(
     params: HashMap<String, String>,
     store: Store,
 ) -> Result<impl Reply, Rejection> {
-    info!("querying artists");
+    event!(target: "atl_sound_exchange", Level::INFO, "querying artists");
+    let mut pagination = pagination::Pagination::default();
+
     if !params.is_empty() {
-        let pagination = pagination::extract_pagination(params)?;
-        info!(pagination = true);
-        let result: Vec<artist::Artist> = store.artists.read().values().cloned().collect();
-        let result = &result[pagination.start..pagination.end];
-        // Was warp::reply::json, need to implement serialize and deserialize for Artist Struct
-        Ok(warp::reply::json(&result))
-    } else {
-        info!(pagination = false);
-        let result: Vec<artist::Artist> = store.artists.read().values().cloned().collect();
-        // Was warp::reply::json, need to implement serialize and deserialize for Artist Struct
-        Ok(warp::reply::json(&result))
+        event!(Level::INFO, "pagination = true");
+        pagination = pagination::extract_pagination(params)?;
     }
+
+    let result: Vec<artist::Artist> =
+        match store.get_artists(pagination.limit, pagination.offset).await {
+            Ok(result) => result,
+            Err(e) => return Err(warp::reject::custom(e)),
+        };
+
+    Ok(warp::reply::json(&result))
 }
+
+// TODO: Update other route handlers for DB compatibility if deemed appropriate later
 
 // Fn for processing HTTP POST requests to the /artists path
 // SHOULD ONLY BE ACCESSIBLE INTERNALLY / WITH AUTHENTICATION
-#[instrument]
+/* #[instrument]
 pub async fn add_artist(
     store: Store,
     artist: artist::Artist,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    info!("inserting artist: {:?}", artist.id.clone());
+    event!(
+        Level::INFO,
+        "inserting artist: {:?}",
+        artist.id.clone()
+    );
     store.artists.write().insert(artist.id.clone(), artist);
 
     Ok(warp::reply::with_status("Artist added", StatusCode::OK))
@@ -44,23 +50,30 @@ pub async fn add_artist(
 
 // Fn for processing HTTP PUT requests to the /artists path
 // SHOULD ONLY BE ACCESSIBLE INTERNALLY / WITH AUTHENTICATION
+//
+// TODO: is there a way to update with only the diff? & if so, is it worth the effort of
+// implementing
 #[instrument]
 pub async fn update_artist(
-    id: String,
+    id: i32,
     store: Store,
     artist: artist::Artist,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    match store
-        .artists
-        .write()
-        .get_mut(&artist::ArtistID(id.parse().unwrap()))
-    {
+    match store.artists.write().get_mut(&artist::ArtistID(id)) {
         Some(a) => {
-            info!("updating artist: {:?}", artist.id.clone());
+            event!(
+                Level::INFO,
+                "updating artist: {:?}",
+                artist.id.clone()
+            );
             *a = artist;
         }
         None => {
-            info!("failed to find and update artist: {:?}", artist.id.clone());
+            event!(
+                Level::INFO,
+                "failed to find and update artist: {:?}",
+                artist.id.clone()
+            );
             return Err(warp::reject::custom(Error::ArtistNotFound));
         }
     }
@@ -71,18 +84,15 @@ pub async fn update_artist(
 // Fn for processing HTTP DELETE requests to the /artist path
 // SHOULD ONLY BE ACCESSIBLE INTERNALLY / WITH AUTHENTICATION
 
-//  and_then filter expects id to be string, so we pass it as a String, then parse to u16 while matching on accessing the hashmap via its keys (id: ArtistID(u16))
+//  and_then filter expects id to be string, so we pass it as a String, then parse to u16 while matching on accessing the hashmap via its keys (id: ArtistID(i32))
 #[instrument]
-pub async fn delete_artist(id: String, store: Store) -> Result<impl warp::Reply, warp::Rejection> {
-    match store
-        .artists
-        .write()
-        .remove(&artist::ArtistID(id.parse().unwrap()))
-    {
+pub async fn delete_artist(id: i32, store: Store) -> Result<impl warp::Reply, warp::Rejection> {
+    match store.artists.write().remove(&artist::ArtistID(id)) {
         Some(_) => {
-            info!("deleting artist id: {}", id.clone());
+            event!(Level::INFO, "deleting artist id: {}", id.clone());
             return Ok(warp::reply::with_status("Artist deleted", StatusCode::OK));
         }
         None => Err(warp::reject::custom(Error::ArtistNotFound)),
     }
 }
+*/

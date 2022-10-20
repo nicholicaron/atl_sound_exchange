@@ -1,133 +1,133 @@
+use anyhow::Result;
 use parking_lot::RwLock;
-use std::collections::HashMap;
-use std::fs::File;
-use std::io::BufReader;
+use sqlx::{
+    postgres::{PgPool, PgPoolOptions, PgRow},
+    Row,
+};
 use std::sync::Arc;
+use tracing::*;
 
-use crate::types::artist::genre;
-use crate::types::artist::{Artist, ArtistID, Background, Origin};
+// use crate::types::artist::genre;
+use crate::error::Error;
+use crate::types::artist::{Artist, ArtistID};
 
-// local store -- to later be replaced by a DB
+// Store holds the database connection and is passed to the route handlers
 #[derive(Clone, Debug)]
 pub struct Store {
-    // Using a hashmap here so that we can index an item given its ID w/o traversing the whole
-    // collection
-    pub artists: Arc<RwLock<HashMap<ArtistID, Artist>>>,
+    pub connection: PgPool,
 }
 
 impl Store {
-    pub fn new() -> Self {
+    pub async fn new(db_url: &str) -> Self {
+        let db_pool = match PgPoolOptions::new()
+            .max_connections(5)
+            .connect(db_url)
+            .await
+        {
+            Ok(pool) => pool,
+            Err(_) => panic!("Couldn't establish DB connection!"),
+        };
+
         Store {
-            artists: Arc::new(RwLock::new(Self::init())),
+            connection: db_pool,
         }
     }
-    fn init() -> HashMap<ArtistID, Artist> {
-        let kanye_id = 1;
 
-        let kanye_name = "Kanye West".to_string();
-
-        let mut socials: Vec<String> = Vec::new();
+    // Pass limit and offset params to indicate if pagination is wanted by the client
+    pub async fn get_artists(self, limit: Option<i32>, offset: i32) -> Result<Vec<Artist>, Error> {
+        match sqlx::query("SELECT * from artists LIMIT $1 OFFSET $2")
+            // bind method substitutes variables (e.g. $1 -> limit)
+            // limit & offset = pagination params in postgreSQL
+            .bind(limit)
+            .bind(offset)
+            // using map to aggregate each row returned from  postgreSQL query into an Artist
+            // TODO: Buff up error handling here
+            .map(|row: PgRow| Artist {
+                id: ArtistID(row.try_get("id").expect("error fetching id from database")),
+                name: row
+                    .try_get("name")
+                    .expect("error fetching name from database"),
+                genre: row
+                    .try_get("genre")
+                    .expect("error fetching genre from database"),
+                socials: row
+                    .try_get("socials")
+                    .expect("error fetching socials from database"),
+                background: row
+                    .try_get("background")
+                    .expect("error fetching background from database"),
+                deezer_data: Arc::new(RwLock::new(
+                    row.try_get("deezer")
+                        .expect("error fetching deezer data from database"),
+                )),
+                instagram_data: Arc::new(RwLock::new(
+                    row.try_get("instagram")
+                        .expect("error fetching instagram data from database"),
+                )),
+                soundcloud_data: Arc::new(RwLock::new(
+                    row.try_get("soundcloud")
+                        .expect("error fetching soundcloud data from database"),
+                )),
+                spotify_data: Arc::new(RwLock::new(
+                    row.try_get("spotify")
+                        .expect("error fetching spotify data from database"),
+                )),
+                tiktok_data: Arc::new(RwLock::new(
+                    row.try_get("tiktok")
+                        .expect("error fetching tiktok data from database"),
+                )),
+                twitter_data: Arc::new(RwLock::new(
+                    row.try_get("twitter")
+                        .expect("error fetching twitter data from database"),
+                )),
+                yt_channel_data: Arc::new(RwLock::new(
+                    row.try_get("yt_channel")
+                        .expect("error fetching youtube channel data from database"),
+                )),
+                yt_artist_data: Arc::new(RwLock::new(
+                    row.try_get("yt_artist")
+                        .expect("error fetching youtube artist data from database"),
+                )),
+            })
+            // Returns all artists found
+            .fetch_all(&self.connection)
+            .await
         {
-            let social_entries = include_str!("../artist_data/test_kanye/socials.txt").split('\n');
-            for line in social_entries {
-                socials.push(line.to_string());
+            Ok(artists) => Ok(artists),
+            Err(e) => {
+                event!(Level::ERROR, "{:?}", e);
+                Err(Error::DatabaseQueryError)
             }
         }
-
-        let mut origin_lines = include_str!("../artist_data/test_kanye/origin.txt").lines();
-        let background = Background {
-            description: "../../artist_data/test_kanye/background.txt".to_string(),
-            origin: Arc::new(RwLock::new(Origin {
-                city: origin_lines
-                    .next()
-                    .expect("error parsing artist origin [city]")
-                    .to_string(),
-                state: origin_lines
-                    .next()
-                    .expect("error parsing artist origin [state]")
-                    .to_string(),
-                country: origin_lines
-                    .next()
-                    .expect("error parsing artist origin [country]")
-                    .to_string(),
-            })),
-        };
-
-        // Is there a better way to do this? From_reader()????
-        //
-        // We should extract this functionality to a function, but it may be better to wait until we
-        // replace our source with DB
-        let deezer_file = BufReader::new(
-            File::open("./artist_data/test_kanye/deezer.json")
-                .expect("error opening deezer json file"),
-        );
-        let instagram_file = BufReader::new(
-            File::open("./artist_data/test_kanye/instagram.json")
-                .expect("error opening instagram json file"),
-        );
-        let soundcloud_file = BufReader::new(
-            File::open("./artist_data/test_kanye/soundcloud.json")
-                .expect("error opening soundcloudn json file"),
-        );
-        let spotify_file = BufReader::new(
-            File::open("./artist_data/test_kanye/spotify.json")
-                .expect("error opening spotify json file"),
-        );
-        let tiktok_file = BufReader::new(
-            File::open("./artist_data/test_kanye/tiktok.json")
-                .expect("error opening tiktok json file"),
-        );
-        let twitter_file = BufReader::new(
-            File::open("./artist_data/test_kanye/twitter.json")
-                .expect("error opening twitter json file"),
-        );
-        let yt_artist_file = BufReader::new(
-            File::open("./artist_data/test_kanye/youtube_artist.json")
-                .expect("error opening youtube_artist json file"),
-        );
-        let yt_channel_file = BufReader::new(
-            File::open("./artist_data/test_kanye/youtube_channel.json")
-                .expect("error opening youtube_channel json file"),
-        );
-
-        // serde_json::from_reader(file).expect("can't read artist.json file")
-        // serde_json::from_reader(file) vs json! macro???
-        let id = ArtistID(kanye_id);
-        let kanye = Artist {
-            id: id.clone(),
-            name: kanye_name,
-
-            genre: genre::Genre::HipHop,
-            socials,
-            background: Arc::new(RwLock::new(background)),
-            deezer_data: Arc::new(RwLock::new(
-                serde_json::from_reader(deezer_file).expect("Unable to read JSON file."),
-            )),
-            instagram_data: Arc::new(RwLock::new(
-                serde_json::from_reader(instagram_file).expect("Unable to read JSON file."),
-            )),
-            soundcloud_data: Arc::new(RwLock::new(
-                serde_json::from_reader(soundcloud_file).expect("Unable to read JSON file."),
-            )),
-            spotify_data: Arc::new(RwLock::new(
-                serde_json::from_reader(spotify_file).expect("Unable to read JSON file."),
-            )),
-            tiktok_data: Arc::new(RwLock::new(
-                serde_json::from_reader(tiktok_file).expect("Unable to read JSON file."),
-            )),
-            twitter_data: Arc::new(RwLock::new(
-                serde_json::from_reader(twitter_file).expect("Unable to read JSON file."),
-            )),
-            yt_channel_data: Arc::new(RwLock::new(
-                serde_json::from_reader(yt_channel_file).expect("Unable to read JSON file."),
-            )),
-            yt_artist_data: Arc::new(RwLock::new(
-                serde_json::from_reader(yt_artist_file).expect("Unable to read JSON file."),
-            )),
-        };
-
-        let mut artist_profile: HashMap<ArtistID, Artist> = HashMap::new();
-        artist_profile.insert(id, kanye);
-        artist_profile
     }
 }
+
+/* Artist DB schema prototype:
+
+Artists
+    - Artist 1
+         + id: int4
+         + name: varchar
+         + genre: varchar
+         + socials (varchar, varchar, varchar, varchar)
+         + Background
+             * Origin
+                 - city: varchar
+                 - state: char[2]
+                 - country: char[2]
+             * Description: varchar
+         + deezer: jsonb
+         + instagram: jsonb
+         + soundcloud: jsonb
+         + spotify: jsonb
+         + tiktok: jsonb
+         + twitter: jsonb
+         + yt_channel: jsonb
+         + yt_artist: jsonb
+
+Why Jsonb?
+Jsonb is stored in a decomposed binary format
+    - Slightly slower input due to conversion overhead
+    - Significantly faster to process, since no reparsing needed
+    - Also supports indexing
+*/

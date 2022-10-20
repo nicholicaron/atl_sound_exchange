@@ -1,37 +1,37 @@
-pub mod genre;
+// pub mod genre;
+
+// TODO How do we insert artist profile pics TODO
 
 use parking_lot::RwLock;
-use serde::{
-    // ser::{SerializeStruct, Serializer},
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 use serde_json::value::Value as json;
 use std::sync::Arc;
 
 // Newtype Idiom differentiates ArtistID types from normal u16's
 // https://doc.rust-lang.org/rust-by-example/generics/new_types.html
 #[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
-pub struct ArtistID(pub u16);
+pub struct ArtistID(pub i32);
 
 // May bring this newtype for socials vec back eventually, for now it seems unnecessary
 // #[derive(Clone, Serialize, Deserialize, Debug)]
 // struct Url(String);
 
-// Circular references here using Arc and RwLock
-// Had to use the cargo.toml flags "derive" and rc for serde and "serde" for parking_lot
-//
-// --------------------------------------------------------------------------------------------------------------------------------------------------------
-// https://stackoverflow.com/questions/56156876/how-to-deserialize-a-parking-lotmutex-with-serde
-// https://stackoverflow.com/questions/49312600/how-do-i-serialize-or-deserialize-an-arct-in-serde
-// --------------------------------------------------------------------------------------------------------------------------------------------------------
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Artist {
+    // id is i32 for postgresql compatibility -- may change after considering db alternatives
     pub id: ArtistID,
     pub name: String,
-    pub genre: genre::Genre,
-    pub socials: Vec<String>,
-    pub background: Arc<RwLock<Background>>,
+    pub genre: String,
+    // socials.0 = spotify link
+    // socials.1 = apple music link
+    // socials.2 = instagram link
+    // socials.3 = twitter link
+    pub socials: [String; 4],
+    // background.0 = city
+    // background.1 = state
+    // background.2 = country
+    // background.3 = description
+    pub background: [String; 4],
     // At first I thought we could wrap json values with Results, but calls to the chartmetric API still creates files
     // even if no data is present. We may have to match on file contents to check
     pub deezer_data: Arc<RwLock<json>>,
@@ -44,20 +44,21 @@ pub struct Artist {
     pub yt_artist_data: Arc<RwLock<json>>,
 }
 
+/* We should eventually try to more strongly type background, socials, and genre structs. For now I'm simplifying them to be more easily compatible with PostgreSQL mapping (store.rs)
+To decode a custom type (T) we have to implement Type<Postgres> for T, which doesn't seem that hard, but I don't feel like fiddling with it right now
+
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Background {
-    pub origin: Arc<RwLock<Origin>>,
+    pub origin: (),
     pub description: String,
-    // top_songs todo!()
+    // TODO: top_songs
 }
 
-// struct Song {};
-
-// should this be a string tuple or a struct?
-// I wonder if there will be an issue with nested Arc<RwLock<>>'s
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Origin {
     pub city: String,
     pub state: String,
     pub country: String,
 }
+ */

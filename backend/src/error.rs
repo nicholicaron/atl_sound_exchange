@@ -5,12 +5,14 @@ use warp::{
     Rejection, Reply,
 };
 
+use tracing::*;
+
 #[derive(Debug)]
 pub enum Error {
     // when rust can't parse an int out of a string we get a ParseIntError
     ParseError(std::num::ParseIntError),
     MissingParameters,
-    ArtistNotFound,
+    DatabaseQueryError,
 }
 
 // Let's get some custom error messages going to disambiguate a bit
@@ -20,7 +22,8 @@ impl std::fmt::Display for Error {
             // ref???
             Error::ParseError(ref err) => write!(f, "Cannot parse parameter: {}", err),
             Error::MissingParameters => write!(f, "Missing parameter"),
-            Error::ArtistNotFound => write!(f, "Artist not found"),
+            // Error::ArtistNotFound => write!(f, "Artist not found"),
+            Error::DatabaseQueryError => write!(f, "Query could not be executed"),
         }
     }
 }
@@ -32,10 +35,11 @@ impl Reject for Error {}
 // Cache error and return more user friendly error message
 pub async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
     // r.find() allows us to search for specific rejections
-    if let Some(error) = r.find::<Error>() {
+    if let Some(Error::DatabaseQueryError) = r.find() {
+        event!(Level::ERROR, "Database query error");
         Ok(warp::reply::with_status(
-            error.to_string(),
-            StatusCode::RANGE_NOT_SATISFIABLE,
+            Error::DatabaseQueryError.to_string(),
+            StatusCode::UNPROCESSABLE_ENTITY,
         ))
     } else if let Some(error) = r.find::<CorsForbidden>() {
         Ok(warp::reply::with_status(

@@ -1,0 +1,43 @@
+   Compiling backend v0.1.0 (/home/c/dev/rust/atl_sound_exchange/backend)
+warning: unused import: `info`
+ --> src/routes/artist_routes.rs:2:15
+  |
+2 | use tracing::{info, instrument};
+  |               ^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `http::StatusCode`
+ --> src/routes/artist_routes.rs:3:12
+  |
+3 | use warp::{http::StatusCode, Rejection, Reply};
+  |            ^^^^^^^^^^^^^^^^
+
+warning: unused import: `sqlx::postgres::PgTypeInfo`
+ --> src/types/artist/mod.rs:8:5
+  |
+8 | use sqlx::postgres::PgTypeInfo;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+  --> src/routes/artist_routes.rs:27:81
+   |
+27 |             Err(e) => return Err(warp::reject::custom(Error::DatabaseQueryError(e))),
+   |                                                       ------------------------- ^ expected enum `sqlx::Error`, found enum `error::Error`
+   |                                                       |
+   |                                                       arguments to this enum variant are incorrect
+   |
+note: return type inferred to be `sqlx::Error` here
+  --> src/routes/artist_routes.rs:21:22
+   |
+21 |         pagination = pagination::extract_pagination(params)?;
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: tuple variant defined here
+  --> src/error.rs:16:5
+   |
+16 |     DatabaseQueryError(SqlxError),
+   |     ^^^^^^^^^^^^^^^^^^
+
+For more information about this error, try `rustc --explain E0308`.
+warning: `backend` (bin "backend") generated 3 warnings
+error: could not compile `backend` due to previous error; 3 warnings emitted
