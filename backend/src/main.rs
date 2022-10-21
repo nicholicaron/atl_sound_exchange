@@ -3,6 +3,7 @@
 use warp::{http::Method, Filter};
 
 use crate::routes::artist_routes::get_artists;
+use sqlx;
 use tracing_subscriber::fmt::format::FmtSpan;
 
 mod error;
@@ -62,6 +63,10 @@ async fn main() -> Result<(), error::Error> {
     // If we need to add a username and password, the link takes the structure:
     // "postgres://username:password@localhost:port/db_name"
     let store = store::Store::new("postgres://localhost:5432/atlse").await;
+    sqlx::migrate!("./src/migrations")
+        .run(&store.clone().connection)
+        .await
+        .expect("Cannot run migration");
     let store_filter = warp::any().map(move || store.clone());
 
     // Subscriber: receives all internal log and tracing events and decides what to do with them

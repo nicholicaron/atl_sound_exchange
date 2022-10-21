@@ -9,7 +9,10 @@ use tracing::*;
 
 // use crate::types::artist::genre;
 use crate::error::Error;
-use crate::types::artist::{Artist, ArtistID};
+use crate::types::{
+    account::Account,
+    artist::{ArcJson, Artist, ArtistID, NewArtist},
+};
 
 // Store holds the database connection and is passed to the route handlers
 #[derive(Clone, Debug)]
@@ -33,6 +36,67 @@ impl Store {
         }
     }
 
+    pub async fn add_account(self, account: Account) -> Result<bool, Error> {
+        match sqlx::query("INSERT INTO accounts (email, password) VALUES ($1, $2)")
+            .bind(account.email)
+            .bind(account.password)
+            .execute(&self.connection)
+            .await
+        {
+            Ok(_) => Ok(true),
+            Err(error) => {
+                tracing::event!(
+                    tracing::Level::ERROR,
+                    code = error
+                        .as_database_error()
+                        .unwrap()
+                        .code()
+                        .unwrap()
+                        .parse::<i32>()
+                        .unwrap(),
+                    db_message = error.as_database_error().unwrap().message(),
+                    constraint = error.as_database_error().unwrap().constraint().unwrap()
+                );
+                Err(Error::DatabaseQueryError)
+            }
+        }
+    }
+
+    pub async fn add_artists(self, new_artist: NewArtist) -> Result<Artist, sqlx::Error> {
+        match sqlx::query("INSERT INTO artists (id, name, genre, socials, background, deezer, instagram, soundcloud, spotify, tiktok, twitter, yt_channel, yt_artist) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, name, genre, socials, background, deezer, instagram, soundcloud, spotify, tiktok, twitter, yt_channel, yt_artist")
+            .bind(new_artist.name)
+            .bind(new_artist.genre)
+            .bind(new_artist.socials)
+            .bind(new_artist.background)
+            .bind(new_artist.deezer_data)
+            .bind(new_artist.instagram_data)
+            .bind(new_artist.soundcloud_data)
+            .bind(new_artist.tiktok_data)
+            .bind(new_artist.twitter_data)
+            .bind(new_artist.yt_channel_data)
+            .bind(new_artist.yt_artist_data)
+            .map(|row: PgRow| Artist {
+                id: ArtistID(row.get("id")), 
+                name: row.get("artist_name"),
+                genre: row.get("genre"),
+                socials: row.get("socials"),
+                background: row.get("background"),
+                deezer_data: ArcJson { data : Arc::new(RwLock::new(row.get("deezer")))},
+                instagram_data: ArcJson { data : Arc::new(RwLock::new(row.get("instagram")))},
+                soundcloud_data: ArcJson { data : Arc::new(RwLock::new(row.get("soundcloud")))},
+                spotify_data: ArcJson { data : Arc::new(RwLock::new(row.get("spotify")))},
+                tiktok_data: ArcJson { data : Arc::new(RwLock::new(row.get("tiktok")))},
+                twitter_data: ArcJson { data : Arc::new(RwLock::new(row.get("twitter")))},
+                yt_channel_data: ArcJson { data : Arc::new(RwLock::new(row.get("yt_channel")))},
+                yt_artist_data: ArcJson { data : Arc::new(RwLock::new(row.get("yt_artist")))},
+            })
+            .fetch_one(&self.connection)
+            .await{
+                Ok(artist) => Ok(artist),
+                Err(e) => Err(e),
+            }
+    }
+
     // Pass limit and offset params to indicate if pagination is wanted by the client
     pub async fn get_artists(self, limit: Option<i32>, offset: i32) -> Result<Vec<Artist>, Error> {
         match sqlx::query("SELECT * from artists LIMIT $1 OFFSET $2")
@@ -43,51 +107,35 @@ impl Store {
             // using map to aggregate each row returned from  postgreSQL query into an Artist
             // TODO: Buff up error handling here
             .map(|row: PgRow| Artist {
-                id: ArtistID(row.try_get("id").expect("error fetching id from database")),
-                name: row
-                    .try_get("name")
-                    .expect("error fetching name from database"),
-                genre: row
-                    .try_get("genre")
-                    .expect("error fetching genre from database"),
-                socials: row
-                    .try_get("socials")
-                    .expect("error fetching socials from database"),
-                background: row
-                    .try_get("background")
-                    .expect("error fetching background from database"),
-                deezer_data: Arc::new(RwLock::new(
-                    row.try_get("deezer")
-                        .expect("error fetching deezer data from database"),
-                )),
-                instagram_data: Arc::new(RwLock::new(
-                    row.try_get("instagram")
-                        .expect("error fetching instagram data from database"),
-                )),
-                soundcloud_data: Arc::new(RwLock::new(
-                    row.try_get("soundcloud")
-                        .expect("error fetching soundcloud data from database"),
-                )),
-                spotify_data: Arc::new(RwLock::new(
-                    row.try_get("spotify")
-                        .expect("error fetching spotify data from database"),
-                )),
-                tiktok_data: Arc::new(RwLock::new(
-                    row.try_get("tiktok")
-                        .expect("error fetching tiktok data from database"),
-                )),
-                twitter_data: Arc::new(RwLock::new(
-                    row.try_get("twitter")
-                        .expect("error fetching twitter data from database"),
-                )),
-                yt_channel_data: Arc::new(RwLock::new(
-                    row.try_get("yt_channel")
-                        .expect("error fetching youtube channel data from database"),
-                )),
-                yt_artist_data: Arc::new(RwLock::new(
-                    row.try_get("yt_artist")
-                        .expect("error fetching youtube artist data from database"),
-                )),
+                id: ArtistID(row.get("id")),
+                name: row.get("artist_name"),
+                genre: row.get("genre"),
+                socials: row.get("socials"),
+                background: row.get("background"),
+                deezer_data: ArcJson {
+                    data: Arc::new(RwLock::new(row.get("deezer"))),
+                },
+                instagram_data: ArcJson {
+                    data: Arc::new(RwLock::new(row.get("instagram"))),
+                },
+                soundcloud_data: ArcJson {
+                    data: Arc::new(RwLock::new(row.get("soundcloud"))),
+                },
+                spotify_data: ArcJson {
+                    data: Arc::new(RwLock::new(row.get("spotify"))),
+                },
+                tiktok_data: ArcJson {
+                    data: Arc::new(RwLock::new(row.get("tiktok"))),
+                },
+                twitter_data: ArcJson {
+                    data: Arc::new(RwLock::new(row.get("twitter"))),
+                },
+                yt_channel_data: ArcJson {
+                    data: Arc::new(RwLock::new(row.get("yt_channel"))),
+                },
+                yt_artist_data: ArcJson {
+                    data: Arc::new(RwLock::new(row.get("yt_artist"))),
+                },
             })
             // Returns all artists found
             .fetch_all(&self.connection)
@@ -101,33 +149,3 @@ impl Store {
         }
     }
 }
-
-/* Artist DB schema prototype:
-
-Artists
-    - Artist 1
-         + id: int4
-         + name: varchar
-         + genre: varchar
-         + socials (varchar, varchar, varchar, varchar)
-         + Background
-             * Origin
-                 - city: varchar
-                 - state: char[2]
-                 - country: char[2]
-             * Description: varchar
-         + deezer: jsonb
-         + instagram: jsonb
-         + soundcloud: jsonb
-         + spotify: jsonb
-         + tiktok: jsonb
-         + twitter: jsonb
-         + yt_channel: jsonb
-         + yt_artist: jsonb
-
-Why Jsonb?
-Jsonb is stored in a decomposed binary format
-    - Slightly slower input due to conversion overhead
-    - Significantly faster to process, since no reparsing needed
-    - Also supports indexing
-*/

@@ -1,6 +1,0 @@
-TODO:
-    + ERROR HANDLING
-    + DOCUMENTATION
-    + LOGGING
-    + Cool 404 error page
-    + Integrate mellisearch to allow fuzzy searching
