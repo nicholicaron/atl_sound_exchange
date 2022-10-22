@@ -10,8 +10,8 @@ use tracing::*;
 // use crate::types::artist::genre;
 use crate::error::Error;
 use crate::types::{
-    account::Account,
-    artist::{Artist, ArtistID, NewArtist},
+    account::{Account, AccountID},
+    artist::{Artist, ArtistID},
 };
 
 // Store holds the database connection and is passed to the route handlers
@@ -57,55 +57,77 @@ impl Store {
                     db_message = error.as_database_error().unwrap().message(),
                     constraint = error.as_database_error().unwrap().constraint().unwrap()
                 );
-                Err(Error::DatabaseQueryError)
+                Err(Error::DatabaseQueryError(error))
             }
         }
     }
 
-    pub async fn add_artists(self, new_artist: NewArtist) -> Result<Artist, sqlx::Error> {
-        // Can we acquire the locks here before passing them to the query?
-        let unlocked_deezer = new_artist.deezer_data.read().read();
-        let unlocked_instagram = new_artist.instagram_data.read().read();
-        let unlocked_soundcloud = new_artist.soundcloud_data.read().read();
-        let unlocked_spotify = new_artist.spotify_data.read().read();
-        let unlocked_tiktok = new_artist.tiktok_data.read().read();
-        let unlocked_twitter = new_artist.twitter_data.read().read();
-        let unlocked_yt_channel = new_artist.yt_channel_data.read().read();
-        let unlocked_yt_artist = new_artist.yt_channel_data.read().read();
-        match sqlx::query("INSERT INTO artists (id, name, genre, socials, background, deezer, instagram, soundcloud, spotify, tiktok, twitter, yt_channel, yt_artist) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, name, genre, socials, background, deezer, instagram, soundcloud, spotify, tiktok, twitter, yt_channel, yt_artist")
-            .bind(new_artist.name)
-            .bind(new_artist.genre)
-            .bind(new_artist.socials)
-            .bind(new_artist.background)
-            .bind(unlocked_instagram)
-            .bind(unlocked_soundcloud)
-            .bind(unlocked_spotify)
-            .bind(unlocked_tiktok)
-            .bind(unlocked_twitter)
-            .bind(unlocked_yt_channel)
-            .bind(unlocked_yt_artist)
-            .map(|row: PgRow| Artist {
-                id: ArtistID(row.get("id")), 
-                name: row.get("artist_name"),
-                genre: row.get("genre"),
-                socials: row.get("socials"),
-                background: row.get("background"),
-                deezer_data: Arc::new(RwLock::new(row.get("deezer"))),
-                instagram_data: Arc::new(RwLock::new(row.get("instagram"))),
-                soundcloud_data: Arc::new(RwLock::new(row.get("soundcloud"))),
-                spotify_data: Arc::new(RwLock::new(row.get("spotify"))),
-                tiktok_data: Arc::new(RwLock::new(row.get("tiktok"))),
-                twitter_data: Arc::new(RwLock::new(row.get("twitter"))),
-                yt_channel_data: Arc::new(RwLock::new(row.get("yt_channel"))),
-                yt_artist_data: Arc::new(RwLock::new(row.get("yt_artist"))),
+    pub async fn get_account(self, email: String) -> Result<Account, Error> {
+        match sqlx::query("SELECT * from accounts where email = $1")
+            .bind(email)
+            .map(|row: PgRow| Account {
+                id: Some(AccountID(row.get("id"))),
+                email: row.get("email"),
+                password: row.get("password"),
             })
             .fetch_one(&self.connection)
-            .await{
-                Ok(artist) => Ok(artist),
-                Err(e) => Err(e),
+            .await
+        {
+            Ok(account) => Ok(account),
+            Err(error) => {
+                event!(Level::ERROR, "{:?}", error);
+                Err(Error::DatabaseQueryError(error))
             }
+        }
     }
 
+    /*    pub async fn add_artists(self, new_artist: NewArtist) -> Result<Artist, sqlx::Error> {
+            // Can we acquire the locks here before passing them to the query?
+            let unlocked_deezer = new_artist.deezer_data.read().read();
+            let unlocked_instagram = new_artist.instagram_data.read().read();
+            let unlocked_soundcloud = new_artist.soundcloud_data.read().read();
+            let unlocked_spotify = new_artist.spotify_data.read().read();
+            let unlocked_tiktok = new_artist.tiktok_data.read().read();
+            let unlocked_twitter = new_artist.twitter_data.read().read();
+            let unlocked_yt_channel = new_artist.yt_channel_data.read().read();
+            let unlocked_yt_artist = new_artist.yt_channel_data.read().read();
+            match sqlx::query("INSERT INTO artists (id, name, genre, socials, background, deezer, instagram, soundcloud, spotify, tiktok, twitter, yt_channel, yt_artist) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, name, genre, socials, background, deezer, instagram, soundcloud, spotify, tiktok, twitter, yt_channel, yt_artist")
+                .bind(new_artist.name)
+                .bind(new_artist.genre)
+                .bind(new_artist.socials)
+                .bind(new_artist.background)
+                .bind(unlocked_instagram)
+                .bind(unlocked_soundcloud)
+                .bind(unlocked_spotify)
+                .bind(unlocked_tiktok)
+                .bind(unlocked_twitter)
+                .bind(unlocked_yt_channel)
+                .bind(unlocked_yt_artist)
+                .map(|row: PgRow| Artist {
+                    id: ArtistID(row.get("id")),
+                    name: row.get("artist_name"),
+                    genre: row.get("genre"),
+                    socials: row.get("socials"),
+                    background: row.get("background"),
+                    deezer_data: Arc::new(RwLock::new(row.get("deezer"))),
+                    instagram_data: Arc::new(RwLock::new(row.get("instagram"))),
+                    soundcloud_data: Arc::new(RwLock::new(row.get("soundcloud"))),
+                    spotify_data: Arc::new(RwLock::new(row.get("spotify"))),
+                    tiktok_data: Arc::new(RwLock::new(row.get("tiktok"))),
+                    twitter_data: Arc::new(RwLock::new(row.get("twitter"))),
+                    yt_channel_data: Arc::new(RwLock::new(row.get("yt_channel"))),
+                    yt_artist_data: Arc::new(RwLock::new(row.get("yt_artist"))),
+                })
+                .fetch_one(&self.connection)
+                .await{
+                    Ok(artist) => Ok(artist),
+                    Err(e) => {
+                        event!(Level::ERROR, "{:?}, error");
+                        Err(Error::DatabaseQueryError(e))
+                    },
+                }
+        }
+    */
     // Pass limit and offset params to indicate if pagination is wanted by the client
     pub async fn get_artists(self, limit: Option<i32>, offset: i32) -> Result<Vec<Artist>, Error> {
         match sqlx::query("SELECT * from artists LIMIT $1 OFFSET $2")
@@ -121,30 +143,14 @@ impl Store {
                 genre: row.get("genre"),
                 socials: row.get("socials"),
                 background: row.get("background"),
-                deezer_data: ArcJson {
-                    data: Arc::new(RwLock::new(row.get("deezer"))),
-                },
-                instagram_data: ArcJson {
-                    data: Arc::new(RwLock::new(row.get("instagram"))),
-                },
-                soundcloud_data: ArcJson {
-                    data: Arc::new(RwLock::new(row.get("soundcloud"))),
-                },
-                spotify_data: ArcJson {
-                    data: Arc::new(RwLock::new(row.get("spotify"))),
-                },
-                tiktok_data: ArcJson {
-                    data: Arc::new(RwLock::new(row.get("tiktok"))),
-                },
-                twitter_data: ArcJson {
-                    data: Arc::new(RwLock::new(row.get("twitter"))),
-                },
-                yt_channel_data: ArcJson {
-                    data: Arc::new(RwLock::new(row.get("yt_channel"))),
-                },
-                yt_artist_data: ArcJson {
-                    data: Arc::new(RwLock::new(row.get("yt_artist"))),
-                },
+                deezer_data: Arc::new(RwLock::new(row.get("deezer"))),
+                instagram_data: Arc::new(RwLock::new(row.get("instagram"))),
+                soundcloud_data: Arc::new(RwLock::new(row.get("soundcloud"))),
+                spotify_data: Arc::new(RwLock::new(row.get("spotify"))),
+                tiktok_data: Arc::new(RwLock::new(row.get("tiktok"))),
+                twitter_data: Arc::new(RwLock::new(row.get("twitter"))),
+                yt_channel_data: Arc::new(RwLock::new(row.get("yt_channel"))),
+                yt_artist_data: Arc::new(RwLock::new(row.get("yt_artist"))),
             })
             // Returns all artists found
             .fetch_all(&self.connection)
@@ -153,7 +159,7 @@ impl Store {
             Ok(artists) => Ok(artists),
             Err(e) => {
                 event!(Level::ERROR, "{:?}", e);
-                Err(Error::DatabaseQueryError)
+                Err(Error::DatabaseQueryError(e))
             }
         }
     }

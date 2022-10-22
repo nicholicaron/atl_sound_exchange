@@ -91,6 +91,13 @@ async fn main() -> Result<(), error::Error> {
     //
     // Filters allow us to pass around state and return copies of the object we pass around to more than one route handler
 
+    let registration = warp::post()
+        .and(warp::path("registration"))
+        .and(warp::path::end())
+        .and(store_filter.clone())
+        .and(warp::body::json())
+        .and_then(routes::authentication::register);
+
     // to do: allow requesting a single artist via an id
     // parse url as in update_artist but instead of updating the artist in the hashmap, return it
     let get_artists = warp::get()
@@ -144,6 +151,13 @@ async fn main() -> Result<(), error::Error> {
         .and_then(delete_artist);
     */
 
+    let login = warp::post()
+        .and(warp::path("login"))
+        .and(warp::path::end())
+        .and(store_filter.clone())
+        .and(warp::body::json())
+        .and_then(routes::authentication::login);
+
     // defining http routes to try
     // recover = error handling filter, fetches every prev rejection and check
     // which HTTP message we need to send back
@@ -151,6 +165,8 @@ async fn main() -> Result<(), error::Error> {
         // .or(update_artist)
         // .or(add_artist)
         // .or(delete_artist)
+        .or(registration)
+        .or(login)
         .with(cors)
         // log incoming requests as well
         .with(warp::trace::request())
