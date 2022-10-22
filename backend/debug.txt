@@ -1,0 +1,58 @@
+   Compiling backend v0.1.0 (/home/c/dev/rust/atl_sound_exchange/backend)
+error[E0432]: unresolved import `crate::types::artist::ArcJson`
+  --> src/store.rs:14:14
+   |
+14 |     artist::{ArcJson, Artist, ArtistID, NewArtist},
+   |              ^^^^^^^ no `ArcJson` in `types::artist`
+
+error[E0599]: no method named `read` found for struct `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>` in the current scope
+  --> src/store.rs:67:61
+   |
+67 |         let unlocked_deezer = new_artist.deezer_data.read().read();
+   |                                                             ^^^^ method not found in `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>`
+
+error[E0599]: no method named `read` found for struct `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>` in the current scope
+  --> src/store.rs:68:67
+   |
+68 |         let unlocked_instagram = new_artist.instagram_data.read().read();
+   |                                                                   ^^^^ method not found in `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>`
+
+error[E0599]: no method named `read` found for struct `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>` in the current scope
+  --> src/store.rs:69:69
+   |
+69 |         let unlocked_soundcloud = new_artist.soundcloud_data.read().read();
+   |                                                                     ^^^^ method not found in `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>`
+
+error[E0599]: no method named `read` found for struct `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>` in the current scope
+  --> src/store.rs:70:63
+   |
+70 |         let unlocked_spotify = new_artist.spotify_data.read().read();
+   |                                                               ^^^^ method not found in `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>`
+
+error[E0599]: no method named `read` found for struct `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>` in the current scope
+  --> src/store.rs:71:61
+   |
+71 |         let unlocked_tiktok = new_artist.tiktok_data.read().read();
+   |                                                             ^^^^ method not found in `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>`
+
+error[E0599]: no method named `read` found for struct `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>` in the current scope
+  --> src/store.rs:72:63
+   |
+72 |         let unlocked_twitter = new_artist.twitter_data.read().read();
+   |                                                               ^^^^ method not found in `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>`
+
+error[E0599]: no method named `read` found for struct `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>` in the current scope
+  --> src/store.rs:73:69
+   |
+73 |         let unlocked_yt_channel = new_artist.yt_channel_data.read().read();
+   |                                                                     ^^^^ method not found in `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>`
+
+error[E0599]: no method named `read` found for struct `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>` in the current scope
+  --> src/store.rs:74:68
+   |
+74 |         let unlocked_yt_artist = new_artist.yt_channel_data.read().read();
+   |                                                                    ^^^^ method not found in `parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, JsonValue>`
+
+Some errors have detailed explanations: E0432, E0599.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `backend` due to 9 previous errors

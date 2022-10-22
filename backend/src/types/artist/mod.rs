@@ -14,10 +14,10 @@ pub struct ArtistID(pub i32);
 
 // custom Arc RwLock Json type so that we can encode to postgreSQL
 // We don't need to implement decode, as we do that manually by wrapping json returned from postgreSQL in Arc::new(RwLock::new())
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ArcJson {
-    pub data: Arc<RwLock<json>>,
-}
+// #[derive(Clone, Debug, Serialize, Deserialize)]
+// pub struct ArcJson {
+//     pub data: Arc<RwLock<json>>,
+// }
 
 // impl sqlx::Encode<'q DB> for ArcJson {
 //     todo!();
@@ -41,14 +41,14 @@ pub struct Artist {
     pub background: [String; 4],
     // At first I thought we could wrap json values with Results, but calls to the chartmetric API still creates files
     // even if no data is present. We may have to match on file contents to check
-    pub deezer_data: ArcJson,
-    pub instagram_data: ArcJson,
-    pub soundcloud_data: ArcJson,
-    pub spotify_data: ArcJson,
-    pub tiktok_data: ArcJson,
-    pub twitter_data: ArcJson,
-    pub yt_channel_data: ArcJson,
-    pub yt_artist_data: ArcJson,
+    pub deezer_data: Arc<RwLock<json>>,
+    pub instagram_data: Arc<RwLock<json>>,
+    pub soundcloud_data: Arc<RwLock<json>>,
+    pub spotify_data: Arc<RwLock<json>>,
+    pub tiktok_data: Arc<RwLock<json>>,
+    pub twitter_data: Arc<RwLock<json>>,
+    pub yt_channel_data: Arc<RwLock<json>>,
+    pub yt_artist_data: Arc<RwLock<json>>,
 }
 
 /* We should eventually try to more strongly type background, socials, and genre structs. For now I'm simplifying them to be more easily compatible with PostgreSQL mapping (store.rs)
@@ -77,12 +77,12 @@ pub struct NewArtist {
     pub genre: String,
     pub socials: [String; 4],
     pub background: [String; 4],
-    pub deezer_data: ArcJson,
-    pub instagram_data: ArcJson,
-    pub soundcloud_data: ArcJson,
-    pub spotify_data: ArcJson,
-    pub tiktok_data: ArcJson,
-    pub twitter_data: ArcJson,
-    pub yt_channel_data: ArcJson,
-    pub yt_artist_data: ArcJson,
+    pub deezer_data: Arc<RwLock<json>>,
+    pub instagram_data: Arc<RwLock<json>>,
+    pub soundcloud_data: Arc<RwLock<json>>,
+    pub spotify_data: Arc<RwLock<json>>,
+    pub tiktok_data: Arc<RwLock<json>>,
+    pub twitter_data: Arc<RwLock<json>>,
+    pub yt_channel_data: Arc<RwLock<json>>,
+    pub yt_artist_data: Arc<RwLock<json>>,
 }
