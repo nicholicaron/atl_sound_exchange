@@ -26,11 +26,10 @@ For the proof of concept we will create a simulation of this market by scraping 
 * Musical artists are being screwed and extorted by record labels and their shady business practices 
     - https://www.youtube.com/watch?v=6fa8lJKTy0I
 
+![ATLSE](https://user-images.githubusercontent.com/79671850/197922859-5f2301e6-b8b7-4a47-bead-f97543d069ca.png)
 <blockquote>     "The problem of collective action is a variant of the prisoners' dilemma, albeit one with many more than two prisoners... How can unpopular tyrants control large populations for long periods [when] a simultaneous move by the masses stands a very good chance of success.
 But the communication and coordination required for such action is difficult, and the oppresors, knowing the power of the masses, take special steps to keep it difficult. When the people must act individually and hope that the momentum will build up, the question arises, 'Who is going to be the first?'" </blockquote>
- 
- 
--- "The art of strategy"
-![ATLSE](https://user-images.githubusercontent.com/79671850/197922859-5f2301e6-b8b7-4a47-bead-f97543d069ca.png)
+- "The art of strategy"
+
 
 
