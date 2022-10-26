@@ -31,4 +31,6 @@ But the communication and coordination required for such action is difficult, an
  
  
 -- "The art of strategy"
+![ATLSE](https://user-images.githubusercontent.com/79671850/197922859-5f2301e6-b8b7-4a47-bead-f97543d069ca.png)
+
 
