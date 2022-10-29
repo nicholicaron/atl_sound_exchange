@@ -81,6 +81,11 @@ impl Store {
         }
     }
 
+    // RELEVANT LINKS
+    // https://stackoverflow.com/questions/74150290/encode-arcrwlockserde-json-to-postgresql-jsonb?noredirect=1#comment130918088_74150290
+    // https://docs.rs/sqlx/0.6.2/sqlx/trait.Encode.html
+    // https://docs.rs/sqlx-core/0.6.2/src/sqlx_core/postgres/types/interval.rs.html#196
+
     /*    pub async fn add_artists(self, new_artist: NewArtist) -> Result<Artist, sqlx::Error> {
             // Can we acquire the locks here before passing them to the query?
             let unlocked_deezer = new_artist.deezer_data.read().read();
