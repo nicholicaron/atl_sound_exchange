@@ -56,7 +56,8 @@ fn verify_password(hash: &str, password: &[u8]) -> Result<bool, argon2::Error> {
 
 fn issue_token(account_id: AccountID) -> String {
     let state = serde_json::to_string(&account_id).expect("Failed to serialize state");
-    // Issua a token which puts the AccountID into a string and packs it the paseto token
+    // Issue a token which puts the AccountID into a string and packs it the paseto token
+    // TODO: need to swap paseto with oauth2 crate -- Paseto has a CVE
     local_paseto(&state, None, "RANDOM WORDS WINTER MACINTOSH PC".as_bytes())
         .expect("Failed to create token")
 }
