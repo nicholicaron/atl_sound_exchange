@@ -6,13 +6,15 @@ use sqlx::{
 };
 use std::sync::Arc;
 use tracing::*;
-
+use serde_json::value::Value as json;
+use chrono::NaiveDate;
 // use crate::types::artist::genre;
 use crate::error::Error;
 use crate::types::{
     account::{Account, AccountID},
-    artist::{Artist, ArtistID},
+    artist::{Artist, ArtistID, NewArtist, Metric},
 };
+
 
 // Store holds the database connection and is passed to the route handlers
 #[derive(Clone, Debug)]
@@ -86,7 +88,7 @@ impl Store {
     // https://docs.rs/sqlx/0.6.2/sqlx/trait.Encode.html
     // https://docs.rs/sqlx-core/0.6.2/src/sqlx_core/postgres/types/interval.rs.html#196
 
-    /*    pub async fn add_artists(self, new_artist: NewArtist) -> Result<Artist, sqlx::Error> {
+        pub async fn add_artists(self, new_artist: NewArtist) -> Result<Artist, sqlx::Error> {
             // Can we acquire the locks here before passing them to the query?
             let unlocked_deezer = new_artist.deezer_data.read().read();
             let unlocked_instagram = new_artist.instagram_data.read().read();
@@ -132,7 +134,7 @@ impl Store {
                     },
                 }
         }
-    */
+    
     // Pass limit and offset params to indicate if pagination is wanted by the client
     pub async fn get_artists(self, limit: Option<i32>, offset: i32) -> Result<Vec<Artist>, Error> {
         match sqlx::query("SELECT * from artists LIMIT $1 OFFSET $2")
@@ -167,5 +169,11 @@ impl Store {
                 Err(Error::DatabaseQueryError(e))
             }
         }
+    }
+    // Should this function reside on Artist's Impl block or Store's impl block?
+    pub async fn get_metrics(metric: Metric, duration: (NaiveDate, NaiveDate)) -> Result<Arc<RwLock<json>>, Error> {
+        match sqlx::query("SELECT * from artists LIMIT $1 OFFSET $2")
+            .bind(limit)
+            .bind(offset)
     }
 }

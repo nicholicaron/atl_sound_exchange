@@ -15,6 +15,7 @@ pub enum Error {
     DatabaseQueryError(sqlx::Error),
     WrongPassword,
     ArgonLibraryError(ArgonError),
+    GraphingError,
 }
 
 // Let's get some custom error messages going to disambiguate a bit
@@ -28,6 +29,7 @@ impl std::fmt::Display for Error {
             Error::DatabaseQueryError(_) => write!(f, "Query could not be executed"),
             Error::WrongPassword => write!(f, "Wrong password"),
             Error::ArgonLibraryError(_) => write!(f, "Cannot verify password"),
+            Error::GraphingError => write!(f, "Unable to produce graph"),
         }
     }
 }
