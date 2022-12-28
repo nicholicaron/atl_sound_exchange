@@ -22,16 +22,16 @@ pub struct Artist {
     pub id: ArtistID,
     pub name: String,
     pub genre: String,
+    pub socials: [String; 4],
     // socials.0 = spotify link
     // socials.1 = apple music link
     // socials.2 = instagram link
     // socials.3 = twitter link
-    pub socials: [String; 4],
+    pub background: [String; 4],
     // background.0 = city
     // background.1 = state
     // background.2 = country
     // background.3 = description
-    pub background: [String; 4],
     pub deezer_data: Arc<RwLock<json>>,
     pub instagram_data: Arc<RwLock<json>>,
     pub soundcloud_data: Arc<RwLock<json>>,
