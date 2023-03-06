@@ -16,6 +16,8 @@ pub enum Error {
     WrongPassword,
     ArgonLibraryError(ArgonError),
     GraphingError,
+    ApiError,
+    NoDataError,
 }
 
 // Let's get some custom error messages going to disambiguate a bit
@@ -30,6 +32,7 @@ impl std::fmt::Display for Error {
             Error::WrongPassword => write!(f, "Wrong password"),
             Error::ArgonLibraryError(_) => write!(f, "Cannot verify password"),
             Error::GraphingError => write!(f, "Unable to produce graph"),
+            Error::ApiError => write!(f, "Unable to pull artist data from API"),
         }
     }
 }

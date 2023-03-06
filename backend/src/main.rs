@@ -7,6 +7,7 @@ use sqlx;
 use tracing_subscriber::fmt::format::FmtSpan;
 
 mod error;
+mod fetch_data;
 mod routes;
 mod store;
 mod types;

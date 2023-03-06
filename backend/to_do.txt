@@ -1,0 +1,80 @@
+    - Pick up @ ch. 9.1.8 -- Add an expiry date to tokens
+
+- Impl for ArtistSnapshot
+  + Debug (don't rely on derive impl)
+	- Show Artist name, id, and timestamp
+	- Show which fields are present? E.g some(snapshot) =>
+	  true, None => false
+	- Should help with tracing output
+  + Make sure clone works properly (clone is called on Arc<T> vs T)
+  + PartialEq 
+	- Should compare ArtistID & timestamp
+
+- Should we have a hashmap mapping artist names to ids?
+  I think so
+- Should we have an enum for artrist names?
+  I think so
+
+Question:
+    - Should the artist struct be structured differenly?
+    - Each streaming struct should derive deserialize (and serialize for DB storage)
+    - E.g.
+        + Artist_Timestp:
+            - id: ArtistID
+            - name: String
+            - genre: String
+            - socials: [String; 4]
+            - background: [String; 4]
+            - deezer_data struct
+                + link: String
+                + deezer_fans struct
+                    - weekly_diff: i32
+                    - weekly_diff_percent: f32
+                    - monthly_diff: i32
+                    - monthly_diff_percent: f32
+                    - value: u32
+                    - timestp: String
+                    - daily_diff: i16
+                    - interpolated: bool
+            - etc...
+
+
+finish hardcoding ids
+
+Do in order:
+    - Encode Arc<RwLock<serde_json>> to PostgreSQL jsonb (https://stackoverflow.com/questions/74150290/encode-arcrwlockserde-json-to-postgresql-jsonb)
+    - finish store.get_metrics function to input artist name, metric, duration and return a vector of values (u32)
+    - Move DB to aws
+    - Finish graphing .draw_series functions to plot vector of u32s from get_metrics
+    - Route handling of graphing functions
+    - Establish frontend, create artist dashboard (with html5 canvas to draw graphs) and user dashboard
+
+
+Short Term:
+    - DOCUMENTATION/UNIT TESTING
+    - Error Handling
+    - Watch decrusting serde and implement encode/decode for artist struct
+    - Get some semblance of graphing going
+        + Figure out how to push graphs to frontend
+    - Yew for frontend?
+    - Replace manual python api call with integrated rust api call & automated db storag
+    - Deploy DB on AWS
+    - Deploy API/frontend on AWS
+    - PAY ATTENTION TO STACK vs HEAP ALLOCATIONS
+    - Change static candlestick charts to dynamic, realtime charts (at least for price)
+    - User dashboard
+    - Integrate mellisearch to allow fuzzy searching
+    - Beef up loging/tracing
+        + parse information from http requests and access specific info (e.g. host of request) & impl display for them
+    - Integrate Postman
+    - Desktop app - Use Tauri (https://tauri.app/) (https://dev.to/stevepryde/create-a-desktop-app-in-rust-using-tauri-and-yew-2bhe)
+    - Add Middleware/apis
+        - spotify api (music & scraping)? (https://apilayer.com/marketplace/spotify-api#documentation-tab)
+        - currency data api? (https://apilayer.com/marketplace/currency_data-api)
+        - zenscrape scraping api? (https://zenscrape.com/?utm_source=apilayermarketplace&utm_medium=editorspick)
+        - email verification api? (https://apilayer.com/marketplace/email_verification-api)
+
+    -  https://transform.tools/json-to-rust-serde
+
+    - Cache CORS (https://httptoolkit.tech/blog/cache-your-cors/)
+    - Cool 404 error page
